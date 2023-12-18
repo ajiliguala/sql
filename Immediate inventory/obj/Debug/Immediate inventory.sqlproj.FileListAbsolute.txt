@@ -1,0 +1,8 @@
+D:\code\sql\Immediate inventory\bin\Debug\Immediate inventory.dacpac
+D:\code\sql\Immediate inventory\obj\Debug\Immediate inventory.sqlproj.AssemblyReference.cache
+D:\code\sql\Immediate inventory\obj\Debug\Model.xml
+D:\code\sql\Immediate inventory\obj\Debug\refactor.xml
+D:\code\sql\Immediate inventory\obj\Debug\postdeploy.sql
+D:\code\sql\Immediate inventory\obj\Debug\predeploy.sql
+D:\code\sql\Immediate inventory\obj\Debug\Immediate_inventory.dll
+D:\code\sql\Immediate inventory\obj\Debug\Immediate_inventory.pdb
