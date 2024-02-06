@@ -1,0 +1,95 @@
+
+--资产
+WITH CGJM AS (
+	SELECT
+		FPRICE,
+		FMATERIALID,
+		FCREATEDATE as 价目表创建日期,
+		FAPPROVEDATE as 价目表审核日期,
+        AA.物料编码
+	FROM
+		(
+		SELECT
+			A.FPRICE,
+			A.FMATERIALID,
+			B.FCREATEDATE,
+            C.FNUMBER AS 物料编码,
+			b.FAPPROVEDATE,b.FDOCUMENTSTATUS,
+			ROW_NUMBER ( ) OVER ( PARTITION BY A.FMATERIALID ORDER BY B.FCREATEDATE DESC ) AS rn
+		FROM
+			t_PUR_PriceListEntry A
+			LEFT JOIN t_PUR_PriceList B ON A.FID = B.FID
+            LEFT JOIN T_BD_MATERIAL C ON A.FMATERIALID = C.FMATERIALID
+		) AA
+	WHERE
+		rn = 1
+        and FDOCUMENTSTATUS='c'
+        AND (LEFT(AA.物料编码, 2) = '11' AND SUBSTRING(AA.物料编码, 3, 1) = '.'
+        OR LEFT(AA.物料编码, 2) = '13' AND SUBSTRING(AA.物料编码, 3, 1) = '.')
+
+		--AND FMATERIALID='234775'
+
+),
+
+--材料
+CGJM1 AS (
+	SELECT
+		FPRICE,
+		FMATERIALID,
+		FCREATEDATE as 价目表创建日期,
+		FAPPROVEDATE as 价目表审核日期,
+         AA.物料编码
+	FROM
+		(
+		SELECT
+			A.FPRICE,
+			A.FMATERIALID,
+			B.FCREATEDATE,
+			b.FAPPROVEDATE,b.FDOCUMENTSTATUS,
+             C.FNUMBER AS 物料编码,
+			ROW_NUMBER ( ) OVER ( PARTITION BY A.FMATERIALID ORDER BY B.FCREATEDATE DESC ) AS rn
+		FROM
+			t_PUR_PriceListEntry A
+			LEFT JOIN t_PUR_PriceList B ON A.FID = B.FID
+             LEFT JOIN T_BD_MATERIAL C ON A.FMATERIALID = C.FMATERIALID
+		) AA
+	WHERE
+		rn = 1
+        and FDOCUMENTSTATUS='c'
+        AND (LEFT(AA.物料编码, 2) <> '11' AND SUBSTRING(AA.物料编码, 3, 1) = '.'
+        AND LEFT(AA.物料编码, 2) <> '13' AND SUBSTRING(AA.物料编码, 3, 1) = '.')
+
+),
+MainQuery AS (
+    SELECT
+
+        CASE
+            WHEN DATEDIFF(DAY, A.FAPPROVEDATE,JM.价目表审核日期) BETWEEN 3 AND 7 THEN 1
+            ELSE 0
+        END AS 采购价目表创建日期_7天内_标志,
+        CASE
+            WHEN DATEDIFF(DAY, A.FAPPROVEDATE,JM.价目表审核日期) > 7 THEN 1
+            ELSE 0
+        END AS 采购价目表创建日期_大于7天_标志
+    FROM T_PUR_Requisition A
+    LEFT JOIN T_BAS_BILLTYPE_L B ON A.FBILLTYPEID = B.FBILLTYPEID AND B.FLOCALEID = 2052
+    INNER JOIN T_PUR_ReqEntry AA ON AA.FID = A.FID
+    LEFT JOIN T_BD_MATERIAL D ON AA.FMATERIALID = D.FMATERIALID
+    LEFT JOIN T_BD_MATERIAL_L E ON AA.FMATERIALID = E.FMATERIALID
+    --LEFT JOIN T_BD_UNIT_L T5L ON T5L.FUNITID = AA.FUNITID AND T5L.FLOCALEID = 2052
+    LEFT JOIN CGJM JM ON JM.物料编码=D.FNUMBER
+    --LEFT JOIN CGJM JM ON JM.FMATERIALID=AA.FMATERIALID
+
+    WHERE
+        A.FDOCUMENTSTATUS = 'C'
+        AND A.FAPPLICATIONORGID IN ('1', '100329', '100330', '100331', '100332', '3798064', '4355331')
+        --AND (   -- 只包括当前月份的数据
+             --(JM.价目表审核日期 >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) AND jm.价目表审核日期 < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0))
+           -- )
+)
+-- 外部查询用于计算结果
+SELECT
+    COALESCE(SUM(采购价目表创建日期_7天内_标志), 0) AS 采购价目表创建日期_7天内_数量,
+    COALESCE(SUM(采购价目表创建日期_大于7天_标志), 0) AS 采购价目表创建日期_大于7天_数量
+    --CAST(COUNT(CASE WHEN 采购订单单据编号 IS NOT NULL THEN 1 END) AS FLOAT) / CAST( COUNT(CASE WHEN 订单编号 IS NOT NULL THEN 1 END) AS FLOAT) AS 采购订单单据编号占订单编号百分比
+FROM MainQuery;

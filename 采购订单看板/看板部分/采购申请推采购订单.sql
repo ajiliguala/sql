@@ -1,0 +1,42 @@
+WITH CG AS (
+    SELECT
+        e.FBILLNO AS 采购订单单据编号,
+        e.FCREATEDATE as 创建日期,
+        e.FAPPROVEDATE as 审核日期,
+        ml2.FNAME AS 采购订单物料名称,
+        d.FSEQ AS 采购订单分录序号,
+        c.FBILLNO AS 采购申请单单据编号,
+        ml1.FNAME AS 采购申请单物料名称,
+        b.FSEQ AS 采购申请单分录序号,
+        ml1.FMATERIALID,
+        c.FDOCUMENTSTATUS
+    FROM
+        T_PUR_POORDERENTRY_LK a
+        LEFT JOIN T_PUR_REQENTRY b ON a.FSID = b.FENTRYID
+        LEFT JOIN T_PUR_REQUISITION c ON b.FID = c.FID
+        LEFT JOIN T_BD_MATERIAL_L ml1 ON b.FMATERIALID = ml1.FMATERIALID AND ml1.FLOCALEID = 2052
+        LEFT JOIN T_PUR_POORDERENTRY d ON a.FENTRYID = d.FENTRYID
+        LEFT JOIN T_PUR_POORDER e ON d.FID = e.FID
+        LEFT JOIN T_BD_MATERIAL_L ml2 ON d.FMATERIALID = ml2.FMATERIALID AND ml2.FLOCALEID = 2052
+    WHERE
+        a.FSTABLENAME = 'T_PUR_ReqEntry'
+        AND c.FDOCUMENTSTATUS ='C'
+),
+MainQuery AS (
+    SELECT
+    采购订单单据编号,
+    A.FBILLNO AS 订单编号
+    FROM T_PUR_Requisition A
+    LEFT JOIN T_ORG_ORGANIZATIONS_L C ON C.FPKID = A.FAPPLICATIONORGID
+    INNER JOIN T_PUR_ReqEntry AA ON AA.FID = A.FID
+	LEFT JOIN CG ON CG.采购申请单单据编号 = A.FBILLNO AND CG.FMATERIALID = AA.FMATERIALID AND AA.FSEQ = CG.采购申请单分录序号
+    WHERE
+        A.FDOCUMENTSTATUS = 'C'
+        AND A.FAPPLICATIONORGID IN ('1', '100329', '100330', '100331', '100332', '3798064', '4355331')
+)
+-- 外部查询用于计算结果
+SELECT
+    COUNT(CASE WHEN 采购订单单据编号 IS NOT NULL THEN 1 END) AS 采购订单单据编号非空行数,
+    COUNT(CASE WHEN 订单编号 IS NOT NULL THEN 1 END) AS 订单编号非空行数,
+    COUNT(CASE WHEN 订单编号 IS NOT NULL THEN 1 END)-COUNT(CASE WHEN 采购订单单据编号 IS NOT NULL THEN 1 END) AS 采购申请未下推数量
+FROM MainQuery;
