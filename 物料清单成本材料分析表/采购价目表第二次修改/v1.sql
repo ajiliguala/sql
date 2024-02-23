@@ -1,7 +1,5 @@
 
 	SELECT DISTINCT TOP 100 PERCENT
-	CCC.使用组织,
-	CCC.供应商,
 	A.FXMC AS 父项名称,
 	A.FXBM AS 父项编码,
 	A.FPERUNITSTANDHOUR AS 标准工时,
@@ -11,19 +9,21 @@
 	A.ZXGG AS 子项规格,
 	A.用量,
 	A.备料比例,
-    CCC.币别,
-	A.未税单价本位币,
+	A.未税单价本位币 AS 入库未税单价本位币,
 	A.材料总价,
 	A.币别 AS 销售币别,
 	A.销售单价,
-	CCC.枚举名称,
---计算成本材料
 	SUM(CASE WHEN A.FMATERIALTYPE = 1 THEN A.材料总价 ELSE 0 END) OVER (PARTITION BY A.FXBM) AS 材料成本,
+	CCC.供应商,
+	CCC.FDATAVALUE AS 采购价格类型,
+	CCC.FPRICE AS 采购未税单价,
+    CCC.币别 AS 采购币别,
 	CCC."替代前未税(本位币)单价",
     CCC.替代前物料代码,
     CCC.替代前物料名称,
     CCC.替代前规格型号,
-	CCC.替代前供应商
+	CCC.替代前供应商,
+    CCC.使用组织
 
 FROM
 	(
@@ -192,7 +192,7 @@ SELECT
     left JOIN (SELECT
     BBB.使用组织,
     BBB.币别,
-    BBB.枚举名称,
+    BBB.FDATAVALUE,
     BBB.供应商,
     BBB.FAPPROVEDATE,
     BBB.XUHAO,
@@ -201,14 +201,15 @@ SELECT
     BBB.F_KING_TDQWLMC AS '替代前物料名称',
     BBB.F_KING_TDQGZXH AS '替代前规格型号',
 	BBB.F_KING_TDQGYS AS '替代前供应商',
-	BBB.FNUMBER
+	BBB.FNUMBER,
+	BBB.FPRICE
 FROM
 (
 	SELECT
 	    G.FNUMBER,
 	    B.FNAME as 使用组织,
 	    C.FNAME as 币别,
-	    E.枚举名称,
+	    E.FDATAVALUE,
 	    F.FNAME AS 供应商,
 	    A.FAPPROVEDATE ,
 	    D.F_KING_TDQWSDJ,
@@ -216,18 +217,19 @@ FROM
 	    D.F_KING_TDQWLMC,
 	    D.F_KING_TDQGZXH,
 	    D.F_KING_TDQGYS,
+	    d.FPRICE,
 	    ROW_NUMBER ( ) OVER ( PARTITION BY D.FMATERIALID ORDER BY A.FAPPROVEDATE DESC ) AS XUHAO
 	FROM t_PUR_PriceList A
 	LEFT JOIN T_ORG_ORGANIZATIONS_L B ON A.FUSEORGID=B.FORGID
     LEFT JOIN T_BD_CURRENCY_l C ON A.FCURRENCYID=C.FPKID
 	LEFT JOIN T_PUR_PRICELISTENTRY D ON D.FID=A.FID
 	LEFT JOIN (
--- 查询某个枚举类型下的所有枚举项
-SELECT a.FENUMID AS 枚举内码,b.FCAPTION AS 枚举名称,a.FVALUE FROM T_META_FORMENUMITEM a
-LEFT JOIN T_META_FORMENUMITEM_L b ON a.FENUMID=b.FENUMID AND b.FLOCALEID=2052
---枚举类型ID
-WHERE a.FID='2ac5f5c7-51e1-4d43-8caa-41064c9b3a0a'
-) E ON E.FVALUE=A.FPRICETYPE
+select a.FNUMBER, a.FID,b.FMASTERID,b.FENTRYID,c.FDATAVALUE from T_BAS_ASSISTANTDATA a
+inner join T_BAS_ASSISTANTDATAENTRY b on a.FID=b.FID
+inner join T_BAS_ASSISTANTDATAENTRY_L c on (b.FENTRYID = c.FENTRYID and c.FLocaleId = 2052)
+where b.FDOCUMENTSTATUS ='C'
+and a.FNUMBER like '%CGJGLX%'
+) E ON E.FMASTERID=D.FDEFASSISTANTO
 	LEFT JOIN t_BD_Supplier_l F ON F.FSUPPLIERID=A.FSUPPLIERID
 	LEFT JOIN T_BD_MATERIAL G ON G.FMATERIALID=D.FMATERIALID
 	WHERE B.FNAME='芜湖长信新型显示器件有限公司')BBB
@@ -236,9 +238,9 @@ WHERE a.FID='2ac5f5c7-51e1-4d43-8caa-41064c9b3a0a'
 		a.ZXBM IS NOT NULL
 		--AND A.FPERUNITSTANDHOUR<>'0'
 		--根据组织筛选数据
-		--AND A.ZZ=_CurrentOrgUnitId_
+		AND A.ZZ=_CurrentOrgUnitId_
 		--添加父项多选功能，不选择时返回全部数据
-		--AND (A.FXBM IN (#FXBM#) OR (SELECT #FXBM# FOR XML path(''))='' )
+		AND (A.FXBM IN (#FXBM#) OR (SELECT #FXBM# FOR XML path(''))='' )
 	ORDER BY A.FXBM
 
 
