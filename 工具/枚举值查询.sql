@@ -1,0 +1,9 @@
+select
+
+(select FNAME from T_META_FORMENUM_L where FID = T_META_FORMENUMITEM.FID and FLOCALEID =  2052) '枚举类型名称'
+
+,(select FCAPTION from T_META_FORMENUMITEM_L where FENUMID = T_META_FORMENUMITEM.FENUMID  and FLOCALEID = 2052) '枚举项名称'
+
+,*
+
+from T_META_FORMENUMITEM order by FID,FSEQ
