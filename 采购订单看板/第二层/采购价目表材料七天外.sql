@@ -83,7 +83,7 @@ AND C.FORGID IN ('1', '100329', '100330', '100331', '100332', '3798064', '435533
     FROM MainQuery
     WHERE
     Approvalyear>='2023'
-    --and 执行采购='李卓文'
+    and 执行采购='胡斌'
     GROUP BY
         执行采购,
         ApprovalYear,

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/Immediate inventory/Immediate_inventory.sql" charset="GBK" />
     <file url="file://$PROJECT_DIR$/即时库存/bl.sql" charset="GBK" />
     <file url="file://$PROJECT_DIR$/即时库存/kingdee.sql" charset="UTF-16" />
     <file url="file://$PROJECT_DIR$/采购订单看板/ds2.sql" charset="UTF-8" />
