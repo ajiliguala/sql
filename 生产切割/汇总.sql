@@ -11,9 +11,10 @@ with drrk as (
              LEFT JOIN
          T_BD_DEPARTMENT_L E ON E.FDEPTID = b.FWORKSHOPID
     where b.FPRDORGID = '100329'
-      AND year(b.fdate) = year(GETDATE())
-      AND month(b.fdate) = month(GETDATE())
-      AND day(b.fdate) = day(GETDATE())
+      AND B.FDATE >= DATEADD(day, -1, CONVERT(date, GETDATE()))
+      AND B.FDATE < CONVERT(date, GETDATE())
+
+
     GROUP BY E.FNAME, b.fdate),
 
      dyrk as (
@@ -26,8 +27,23 @@ with drrk as (
                   LEFT JOIN
               T_BD_DEPARTMENT_L E ON E.FDEPTID = b.FWORKSHOPID
          where b.FPRDORGID = '100329'
-           AND year(b.fdate) = year(GETDATE())
-           AND month(b.fdate) = month(GETDATE())
+           --     AND B.FDATE >= DATEADD(day, -1, CONVERT(date, GETDATE()))
+--     AND B.FDATE < CONVERT(date, GETDATE())
+           AND (
+             (DAY(GETDATE()) = 1 AND
+              DAY(DATEADD(DAY, -1, GETDATE())) = DAY(DATEADD(MONTH, -1, GETDATE())) AND
+              DATEPART(YEAR, GETDATE()) = DATEPART(YEAR, B.FDATE) AND
+              DATEPART(MONTH, GETDATE()) = DATEPART(MONTH, B.FDATE))
+                 OR
+             (DAY(GETDATE()) != 1 AND
+              MONTH(DATEADD(DAY, -1, GETDATE())) = MONTH(GETDATE()) AND
+              DATEPART(YEAR, GETDATE()) = DATEPART(YEAR, B.FDATE) AND
+              DATEPART(MONTH, GETDATE()) = DATEPART(MONTH, B.FDATE))
+                 OR
+             (DATEPART(YEAR, DATEADD(DAY, -1, GETDATE())) = DATEPART(YEAR, B.FDATE) AND
+              DATEPART(MONTH, DATEADD(DAY, -1, GETDATE())) = DATEPART(MONTH, B.FDATE))
+             )
+
          GROUP BY E.FNAME),
      --车间每日每月领料
      lrll as (SELECT YEAR(b.fdate)     AS '年',
@@ -39,27 +55,41 @@ with drrk as (
                        LEFT JOIN T_PRD_PICKMTRL b ON b.fid = a.fid
                        LEFT JOIN T_BD_DEPARTMENT_L E ON E.FDEPTID = b.FWORKSHOPID
               WHERE b.FPRDORGID = '100329'
-                AND DAY(b.fdate) = DAY(GETDATE())
-                AND YEAR(b.fdate) = YEAR(GETDATE())
-                AND MONTH(b.fdate) = MONTH(GETDATE())
+                AND B.FDATE >= DATEADD(day, -1, CONVERT(date, GETDATE()))
+                AND B.FDATE < CONVERT(date, GETDATE())
+
+
               GROUP BY e.FNAME, b.fdate),
      myll as (SELECT SUM(a.FACTUALQTY) AS '汇总实发数量',
                      e.FNAME
               FROM T_PRD_PICKMTRLDATA a
                        LEFT JOIN T_PRD_PICKMTRL b ON b.fid = a.fid
-                       LEFT JOIN T_BD_DEPARTMENT_L E ON E.FDEPTID = b.FWORKSHOPID
+                       LEFT JOIN T_BD_DEPARTMENT_L e ON e.FDEPTID = b.FWORKSHOPID
               WHERE b.FPRDORGID = '100329'
-                AND YEAR(b.fdate) = YEAR(GETDATE())
-                AND MONTH(b.fdate) = MONTH(GETDATE())
+                AND (
+                  (DAY(GETDATE()) = 1 AND
+                   DAY(DATEADD(DAY, -1, GETDATE())) = DAY(DATEADD(MONTH, -1, GETDATE())) AND
+                   DATEPART(YEAR, GETDATE()) = DATEPART(YEAR, B.FDATE) AND
+                   DATEPART(MONTH, GETDATE()) = DATEPART(MONTH, B.FDATE))
+                      OR
+                  (DAY(GETDATE()) != 1 AND
+                   MONTH(DATEADD(DAY, -1, GETDATE())) = MONTH(GETDATE()) AND
+                   DATEPART(YEAR, GETDATE()) = DATEPART(YEAR, B.FDATE) AND
+                   DATEPART(MONTH, GETDATE()) = DATEPART(MONTH, B.FDATE))
+                      OR
+                  (DATEPART(YEAR, DATEADD(DAY, -1, GETDATE())) = DATEPART(YEAR, B.FDATE) AND
+                   DATEPART(MONTH, DATEADD(DAY, -1, GETDATE())) = DATEPART(MONTH, B.FDATE))
+                  )
               GROUP BY e.FNAME)
-select YEAR(GETDATE())  AS 年,
-       MONTH(GETDATE()) AS 月,
-       DAY(GETDATE())   AS 月,
-       temp.领料单当天数据,
-       temp.领料单当月数据,
-       a.汇总实收数量   AS 入库单当天数据,
-       b.汇总实收数量   AS 入库单当月数据,
-       b.FNAME
+select
+--     YEAR(GETDATE())  AS 年,
+--     MONTH(GETDATE()) AS 月,
+--     DAY(GETDATE())   AS 月,
+temp.领料单当天数据,
+temp.领料单当月数据,
+a.汇总实收数量 AS 入库单当天数据,
+b.汇总实收数量 AS 入库单当月数据,
+b.FNAME
 from drrk a
          right JOIN dyrk B ON A.FNAME = B.FNAME
          left join (select YEAR(GETDATE())  AS 年,
@@ -71,3 +101,6 @@ from drrk a
                     from lrll a
                              right JOIN MYLL B ON A.FNAME = B.FNAME) temp on temp.FNAME = b.FNAME
 order by a.FNAME
+
+-- AND B.FDATE >= CASE WHEN DAY(GETDATE()) = 1 THEN DATEADD(DAY, -1, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)) ELSE DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) END
+-- AND B.FDATE< DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), 0)
