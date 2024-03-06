@@ -490,13 +490,17 @@ FROM (SELECT A.FUSEORGID,
                                  A.FEXCHANGERATE
                           FROM T_BD_Rate A) T
                     WHERE T.XUHAO = 1) HL ON HL.FCYFORID = T.FSETTLECURRID
-WHERE 1 = 1
-  AND T.QTY <> 0
+WHERE
+   T.QTY <> 0
   AND T.[日期] >= CASE
-                      WHEN DAY(GETDATE()) = 1 THEN DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
-                      ELSE
-                          DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) END
-  AND T.[日期] < CASE
+    WHEN DAY (GETDATE()) = 1 THEN DATEADD(MONTH
+    , DATEDIFF(MONTH
+    , 0
+    , GETDATE()) - 1
+    , 0)
+ELSE
+DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) END
+AND T.[日期] < CASE
                      WHEN DAY(GETDATE()) = 1 THEN DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
-                     ELSE DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0) END
+ELSE DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0) END
 ORDER BY T.[日期]
