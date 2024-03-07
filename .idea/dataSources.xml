@@ -15,5 +15,12 @@
       <jdbc-url>jdbc:sqlserver://10.10.111.53;database=AIS20221226000540</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="HR" uuid="bd9f1973-8e03-4abe-ac30-138185c68eb4">
+      <driver-ref>sqlserver.ms</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
+      <jdbc-url>jdbc:sqlserver://10.10.111.48;databaseName=cxhrmis</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
