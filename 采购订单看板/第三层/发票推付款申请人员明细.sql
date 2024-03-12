@@ -6,7 +6,6 @@ WITH ZG AS
 -- 单据头-表头基本-付款核销状态不等于完全
 -- 职责部门编码<>002
 -- 所选分录行（正）应付金额- 付款申请金额-付（退）款关联金额+已申请付款金额>0  或者 所选分录行（负）应付金额- 付款申请金额-付（退）款关联金额+已申请付款金额<0
-
              SELECT A.FBILLNO           AS 单据号,
                     FBUYIVQTY           AS 采购发票数量,
                     A.FWRITTENOFFSTATUS AS 付款核销状态,
@@ -25,7 +24,6 @@ WITH ZG AS
                     B.FPRICEQTY         AS 数量,
                     YEAR(A.FDATE)       AS ApprovalYear,
                     MONTH(A.FDATE)      AS ApprovalMonth
-
              FROM T_AP_PAYABLE A
                       LEFT JOIN T_AP_PAYABLEENTRY B ON A.FID = B.FID
                       LEFT JOIN T_BAS_BILLTYPE_L C ON A.FBILLTYPEID = C.FBILLTYPEID AND C.FLOCALEID = 2052
@@ -48,11 +46,9 @@ WITH ZG AS
                             OR
                         (H.FPAYAMOUNTFOR < 0 AND
                          (H.FPAYAMOUNTFOR - H.FAPPLYAMOUNT - a.FRELATEHADPAYAMOUNT + H.FPAYREAPPLYAMT) < 0)
-                        )))
-        ,
+                        ))),
      FKSQ AS
          (
-
 -- 单据状态等于已审核
 -- 立账类型等于财务应付
 -- 单据头-表头基本-付款核销状态不等于完全
