@@ -6,7 +6,6 @@ FROM
     (SELECT COUNT( DISTINCT FNUMBER) AS TotalCount
               FROM (SELECT D.FNUMBER,
                            B.FCREATEDATE,
-                          B.FUSEORGID,
                            ROW_NUMBER() OVER (PARTITION BY A.FMATERIALID ORDER BY B.FCREATEDATE DESC) AS rn
                     FROM t_PUR_PriceListEntry A
                              LEFT JOIN t_PUR_PriceList B ON A.FID = B.FID
