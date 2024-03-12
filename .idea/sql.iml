@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="DBE_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$/固定资产分析表" />
+    <content url="file://$MODULE_DIR$/工具" />
+    <content url="file://$MODULE_DIR$/物料清单成本材料分析表" />
+    <content url="file://$MODULE_DIR$/物料清单正查" />
+    <content url="file://$MODULE_DIR$/生产切割" />
+    <content url="file://$MODULE_DIR$/采购订单看板" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

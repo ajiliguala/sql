@@ -1,15 +1,81 @@
-SELECT Z.DUTY_DATE, DATEPART(WK, Z.DUTY_DATE - 1) AS WEEK, Z.人数, Z.总出勤时间,z.DEPT_CODE
-FROM (SELECT Y.DUTY_DATE, COUNT(Y.A0190) AS '人数', SUM(出勤时间) AS '总出勤时间',y.DEPT_CODE
-      FROM (SELECT  x.*
-            FROM (SELECT A.A0188, B.A0190, B.A0101, B.DEPT_CODE, A.DUTY_DATE, SUM(A.K_ONHOURS + A.OVER_TIME) as '出勤时间'
-                  FROM K_DAY A
-                           INNER JOIN A01 B ON A.A0188 = B.A0188
---INNER JOIN B01 C ON B.DEPT_CODE=C.DEPT_CODE
-                  WHERE DUTY_DATE >= DATEADD(DAY, 0, DATEDIFF(DAY, 0, GETDATE())) - 49
-                    AND DUTY_DATE < DATEADD(DAY, 0, DATEDIFF(DAY, 0, GETDATE()))
-                    AND B.DEPT_CODE IN ('107183201', '107183202', '10718260200')
-                  GROUP BY A.A0188, B.A0190, B.A0101, B.DEPT_CODE, A.DUTY_DATE) X
-            WHERE X.[出勤时间] <> 0) Y
---WHERE Y.[车间]='一部切割车间'
-      GROUP BY Y.DUTY_DATE,y.DEPT_CODE) Z
-ORDER BY Z.DUTY_DATE
+WITH LastMonthAttendance AS (SELECT Y.DUTY_DATE,
+                                    COUNT(Y.A0190)    AS [人数],
+                                    SUM(Y.[出勤时间]) AS [总出勤时间],
+                                    CASE
+                                        WHEN Y.DEPT_CODE = '102320202' THEN '研磨车间'
+                                        WHEN Y.DEPT_CODE = '102320204' THEN '化强车间'
+                                        WHEN Y.DEPT_CODE = '1023202060007' THEN '蚀刻车间'
+                                        WHEN Y.DEPT_CODE IN ('10232020000', '10232020002', '10232020004') THEN '切割车间'
+                                        WHEN Y.DEPT_CODE IN (
+                                                             '102320206', '10232020600', '1023202060000',
+                                                             '1023202060002',
+                                                             '1023202060004', '1023202060006', '10232020602',
+                                                             '1023202060200',
+                                                             '1023202060202', '1023202060204', '10232020604',
+                                                             '1023202060400',
+                                                             '1023202060402', '1023202060404', '10232020606',
+                                                             '1023202060600',
+                                                             '1023202060602', '1023202060604', '10232020608',
+                                                             '1023202060800',
+                                                             '1023202060802'
+                                            ) THEN '镀膜车间'
+                                        ELSE Y.DEPT_CODE
+                                        END           AS [部门]
+                             FROM (SELECT A.A0188,
+                                          B.A0190,
+                                          B.DEPT_CODE,
+                                          A.DUTY_DATE,
+                                          SUM(A.K_ONHOURS + A.OVER_TIME) AS [出勤时间]
+                                   FROM K_DAY A
+                                            INNER JOIN A01 B ON A.A0188 = B.A0188
+                                   WHERE DUTY_DATE >= DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
+                                     AND DUTY_DATE < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0)
+                                     AND B.DEPT_CODE IN (
+                                                         '102320202', '102320204', '1023202060007', '10232020000',
+                                                         '10232020002',
+                                                         '10232020004', '102320206', '10232020600', '1023202060000',
+                                                         '1023202060002',
+                                                         '1023202060004', '1023202060006', '10232020602',
+                                                         '1023202060200',
+                                                         '1023202060202', '1023202060204', '10232020604',
+                                                         '1023202060400',
+                                                         '1023202060402', '1023202060404', '10232020606',
+                                                         '1023202060600',
+                                                         '1023202060602', '1023202060604', '10232020608',
+                                                         '1023202060800',
+                                                         '1023202060802'
+                                       )
+                                   GROUP BY A.A0188,
+                                            B.A0190,
+                                            B.DEPT_CODE,
+                                            A.DUTY_DATE) Y
+                             WHERE Y.[出勤时间] <> 0
+                             GROUP BY Y.DUTY_DATE,
+                                      CASE
+                                          WHEN Y.DEPT_CODE = '102320202' THEN '研磨车间'
+                                          WHEN Y.DEPT_CODE = '102320204' THEN '化强车间'
+                                          WHEN Y.DEPT_CODE = '1023202060007' THEN '蚀刻车间'
+                                          WHEN Y.DEPT_CODE IN ('10232020000', '10232020002', '10232020004') THEN '切割车间'
+                                          WHEN Y.DEPT_CODE IN (
+                                                               '102320206', '10232020600', '1023202060000',
+                                                               '1023202060002',
+                                                               '1023202060004', '1023202060006', '10232020602',
+                                                               '1023202060200',
+                                                               '1023202060202', '1023202060204', '10232020604',
+                                                               '1023202060400',
+                                                               '1023202060402', '1023202060404', '10232020606',
+                                                               '1023202060600',
+                                                               '1023202060602', '1023202060604', '10232020608',
+                                                               '1023202060800',
+                                                               '1023202060802'
+                                              ) THEN '镀膜车间'
+                                          ELSE Y.DEPT_CODE
+                                          END)
+
+SELECT [部门],
+       DATEPART(YEAR, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0))  AS [年份],
+       DATEPART(MONTH, DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)) AS [月份],
+       SUM([人数])                                                           AS [上个月总人数],
+       SUM([总出勤时间])                                                     AS [上个月总出勤时间]
+FROM LastMonthAttendance
+GROUP BY [部门]

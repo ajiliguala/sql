@@ -67,7 +67,7 @@ A.FDOCUMENTSTATUS='C'
 AND ( (LEFT(D.FNUMBER, 2) <> '11' AND SUBSTRING(D.FNUMBER, 3, 1) = '.'
         OR LEFT(D.FNUMBER, 2) <> '13' AND SUBSTRING(D.FNUMBER, 3, 1) = '.'))
 AND C.FORGID IN ('1', '100329', '100330', '100331', '100332', '3798064', '4355331')
-AND
+
 -- AND (   -- 只包括当前月份的数据
 --              (价目表审核日期 >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) AND 价目表审核日期 < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0))
 --             )
