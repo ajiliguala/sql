@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="DBE_MODULE" version="4">
   <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/.idea" />
+    <content url="file://$MODULE_DIR$/.vs" />
+    <content url="file://$MODULE_DIR$/.vscode" />
+    <content url="file://$MODULE_DIR$/Immediate inventory" />
+    <content url="file://$MODULE_DIR$/WIP" />
+    <content url="file://$MODULE_DIR$/即时库存" />
     <content url="file://$MODULE_DIR$/固定资产分析表" />
     <content url="file://$MODULE_DIR$/工具" />
     <content url="file://$MODULE_DIR$/物料清单成本材料分析表" />
