@@ -6,26 +6,27 @@ WITH ZG AS
 -- 单据头-表头基本-付款核销状态不等于完全
 -- 职责部门编码<>002
 -- 所选分录行（正）应付金额- 付款申请金额-付（退）款关联金额+已申请付款金额>0  或者 所选分录行（负）应付金额- 付款申请金额-付（退）款关联金额+已申请付款金额<0
-             SELECT DISTINCT  A.FBILLNO           AS 单据号,
-                    FBUYIVQTY           AS 采购发票数量,
-                    A.FWRITTENOFFSTATUS AS 付款核销状态,
-                    A.FSETACCOUNTTYPE   AS 立账类型,
-                    A.FBYVERIFY         AS 生成方式,
-                    B.FOPENSTATUS       AS 表体开票核销状态,
-                    C.FNAME             AS 单据类型,
-                    A.FDATE             AS 业务日期,
-                    D.FNAME             AS 供应商,
-                    E.FNAME             AS 采购员,
-                    G.FNAME             AS 物料名称,
-                    F.FNUMBER           AS 物料编码,
-                    G.FSPECIFICATION    AS 物料规格,
-                    B.FPRICE            AS 单价,
-                    T5L.FNAME           AS 单位,
-                    B.FPRICEQTY         AS 数量,
-                    YEAR(A.FDATE)       AS ApprovalYear,
-                    MONTH(A.FDATE)      AS ApprovalMonth,
-                    J.FBILLNO,
-                    J.FPAYAMOUNTFOR_H , J.FAPPLYAMOUNTFOR_H
+             SELECT DISTINCT A.FBILLNO           AS 单据号,
+                             FBUYIVQTY           AS 采购发票数量,
+                             A.FWRITTENOFFSTATUS AS 付款核销状态,
+                             A.FSETACCOUNTTYPE   AS 立账类型,
+                             A.FBYVERIFY         AS 生成方式,
+                             B.FOPENSTATUS       AS 表体开票核销状态,
+                             C.FNAME             AS 单据类型,
+                             A.FDATE             AS 业务日期,
+                             D.FNAME             AS 供应商,
+                             E.FNAME             AS 采购员,
+                             G.FNAME             AS 物料名称,
+                             F.FNUMBER           AS 物料编码,
+                             G.FSPECIFICATION    AS 物料规格,
+                             B.FPRICE            AS 单价,
+                             T5L.FNAME           AS 单位,
+                             B.FPRICEQTY         AS 数量,
+                             YEAR(A.FDATE)       AS ApprovalYear,
+                             MONTH(A.FDATE)      AS ApprovalMonth,
+                             J.FBILLNO,
+                             J.FPAYAMOUNTFOR_H,
+                             J.FAPPLYAMOUNTFOR_H
              FROM T_AP_PAYABLE A
                       LEFT JOIN T_AP_PAYABLEENTRY B ON A.FID = B.FID
                       LEFT JOIN T_BAS_BILLTYPE_L C ON A.FBILLTYPEID = C.FBILLTYPEID AND C.FLOCALEID = 2052
@@ -38,11 +39,11 @@ WITH ZG AS
                       LEFT JOIN T_CN_PAYAPPLYENTRY I ON I.FSRCBILLNO = A.FBILLNO
                       LEFT JOIN T_CN_PAYAPPLY J ON J.FID = I.FID
              WHERE A.FWRITTENOFFSTATUS <> 'C'
-               AND A.FDOCUMENTSTATUS='C'
+               AND A.FDOCUMENTSTATUS = 'C'
                AND A.FSETACCOUNTTYPE = '3'--财务应付
                AND A.F_KING_DESPDEPT <> '002'
                AND A.FENDDATE < GETDATE()
-            AND (J.FPAYAMOUNTFOR_H > J.FAPPLYAMOUNTFOR_H OR J.FPAYAMOUNTFOR_H IS NULL OR J.FAPPLYAMOUNTFOR_H IS NULL )
+               AND (J.FPAYAMOUNTFOR_H > J.FAPPLYAMOUNTFOR_H OR J.FPAYAMOUNTFOR_H IS NULL OR J.FAPPLYAMOUNTFOR_H IS NULL)
                AND A.FPAYORGID IN ('1', '100329', '100330', '100331', '100332', '3798064', '4355331')
                AND ((H.FPAYAMOUNTFOR = 0)
                  OR
@@ -52,8 +53,7 @@ WITH ZG AS
                             OR
                         (H.FPAYAMOUNTFOR < 0 AND
                          (H.FPAYAMOUNTFOR - H.FAPPLYAMOUNT - a.FRELATEHADPAYAMOUNT + H.FPAYREAPPLYAMT) < 0)
-                        ))
-             )
+                        )))
 SELECT ZG.单据号,
        ZG.单据类型,
        ZG.业务日期,
@@ -66,17 +66,17 @@ SELECT ZG.单据号,
        单位,
        ZG.数量,
        ApprovalYear,
-       ApprovalMonth,ZG.FBILLNO,
-                    ZG.FPAYAMOUNTFOR_H , ZG.FAPPLYAMOUNTFOR_H
+       ApprovalMonth,
+       ZG.FBILLNO,
+       ZG.FPAYAMOUNTFOR_H,
+       ZG.FAPPLYAMOUNTFOR_H
 
 FROM ZG
 
-    WHERE
-     (ZG.FPAYAMOUNTFOR_H <>ZG.FAPPLYAMOUNTFOR_H
-      OR  ZG.FPAYAMOUNTFOR_H IS NULL)
-      -- AND ZG.采购员 = '${采购员}'
-     AND
- (
+WHERE (ZG.FPAYAMOUNTFOR_H <> ZG.FAPPLYAMOUNTFOR_H
+    OR ZG.FPAYAMOUNTFOR_H IS NULL)
+  -- AND ZG.采购员 = '${采购员}'
+  AND (
     -- 只包括当前月份的数据
     (ZG.业务日期 >= DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) and
      ZG.业务日期 < DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) + 1, 0))
