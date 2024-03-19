@@ -6,9 +6,9 @@ WITH CGJM AS (SELECT FPRICE,
               FROM (SELECT po1.FPRICE,
                            po1.FMATERIALID,
                            PO.FDOCUMENTSTATUS,
-                           MAT.FNUMBER                                                                                        AS 物料编码,
-                           tFF100001.FNUMBER                                                                                  AS 辅助属性编码,
-                           tFF100001_l.FDATAVALUE                                                                             AS 辅助属性规格,
+                           MAT.FNUMBER                                                                                    AS 物料编码,
+                           tFF100001.FNUMBER                                                                              AS 辅助属性编码,
+                           tFF100001_l.FDATAVALUE                                                                         AS 辅助属性规格,
                            ROW_NUMBER() OVER ( PARTITION BY MAT.FNUMBER,tFF100001.FNUMBER ORDER BY PO.FAPPROVEDATE DESC ) AS rn
                     FROM T_PUR_PriceList po
                              LEFT JOIN t_PUR_PriceListEntry po1 ON (po.FID = po1.FID)
@@ -25,7 +25,8 @@ WITH CGJM AS (SELECT FPRICE,
 
 
 --主材昨日数量
-SELECT PO.FBILLNO,
+SELECT PO.FDATE,
+       PO.FBILLNO,
        MAT.FNUMBER,
        mat_l.FNAME,
        tFF100001_l.FDATAVALUE,
@@ -44,7 +45,7 @@ FROM T_SP_PICKMTRL PO
          LEFT JOIN CGJM ON CGJM.物料编码 = MAT.FNUMBER AND CGJM.辅助属性编码 = tFF100001.FNUMBER
          LEFT JOIN T_BD_UNIT_L T5L ON T5L.FUNITID = PO1.FUNITID AND T5L.FLOCALEID = 2052
 WHERE c.FNAME = '第一事业部'
-  AND PO.FDATE >= DATEADD(day, -2, CONVERT(date, GETDATE()))
+  AND PO.FDATE >= DATEADD(day, -1, CONVERT(date, GETDATE()))
   AND PO.FDATE < CONVERT(date, GETDATE())
 
 

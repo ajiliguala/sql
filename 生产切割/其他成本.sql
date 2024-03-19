@@ -21,11 +21,9 @@ FROM (SELECT po1.FPRICE,
              MAT.FNUMBER                                                                      AS 物料编码,
              QTCB.FQTY                                                                        AS 数量,
              QTCB.FDATE,
-
              ROW_NUMBER() OVER ( PARTITION BY MAT.FMATERIALID ORDER BY PO.FAPPROVEDATE DESC ) AS rn
       FROM QTCB
                LEFT JOIN T_BD_Material mat ON (QTCB.FNUMBER = mat.FNUMBER)
-
                LEFT JOIN t_PUR_PriceListEntry po1 ON (PO1.FMATERIALID = MAT.FMATERIALID)
                LEFT JOIN T_PUR_PriceList po ON PO.FID = PO1.FID) AA
 WHERE rn = 1
