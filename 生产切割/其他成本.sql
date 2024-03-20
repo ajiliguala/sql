@@ -1,30 +1,28 @@
---每天成本
-WITH QTCB AS (SELECT A.FDATE, C.FNUMBER, B.FQTY
-              FROM T_STK_MISDELIVERY A
-                       LEFT JOIN T_STK_MISDELIVERYENTRY B ON A.FID = B.FID
-                       LEFT JOIN T_BD_MATERIAL C ON B.FMATERIALID = C.FMATERIALID
-                       LEFT JOIN T_ORG_ORGANIZATIONS_L D ON A.FSTOCKORGID = D.FORGID
-              WHERE D.FNAME = '第一事业部'
-                AND A.FDATE >= CASE
-                                   WHEN DAY(GETDATE()) = 1 THEN DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
-                                   ELSE DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) END
-                AND A.FDATE < DATEADD(DAY, 0, DATEDIFF(DAY, 0, GETDATE())))
+SELECT QTCB.FDATE, QTCB.FNUMBER, QTCB.FNAME, ISNULL(YFD.单价, 0) AS 单价, QTCB.FQTY,ISNULL(YFD.单价 * QTCB.FQTY, 0) AS 金额
+FROM (SELECT A.FDATE, C.FNUMBER, B.FQTY, E.FNAME
+      FROM T_STK_MISDELIVERY A
+               INNER JOIN T_STK_MISDELIVERYENTRY B ON A.FID = B.FID
+               INNER JOIN T_BD_MATERIAL C ON B.FMATERIALID = C.FMATERIALID
+               INNER JOIN T_BD_MATERIAL_L E ON E.FMATERIALID = C.FMATERIALID
+               INNER JOIN T_ORG_ORGANIZATIONS_L D ON A.FSTOCKORGID = D.FORGID
+      WHERE D.FNAME = '第一事业部'
+        AND A.FDATE >= CASE
+                           WHEN DAY(GETDATE()) = 1 THEN DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()) - 1, 0)
+                           ELSE DATEADD(MONTH, DATEDIFF(MONTH, 0, GETDATE()), 0) END
+        AND A.FDATE < DATEADD(DAY, 0, DATEDIFF(DAY, 0, GETDATE()))
+        AND A.FDOCUMENTSTATUS = 'C') QTCB
+         LEFT JOIN (SELECT DISTINCT *
+                    FROM (SELECT ROW_NUMBER() OVER ( PARTITION BY WL.FNUMBER ORDER BY A.FCreateDate DESC ) AS XUHAO,
+                                 B.FMATERIALID,
+                                 WL.FNUMBER,
+                                 B.FNOTAXAMOUNT / B.FPRICEQTY                                              AS 单价
+                          FROM T_AP_PAYABLE A
+                                   INNER JOIN T_AP_PAYABLEENTRY B ON A.FID = B.FID
+                                   INNER JOIN (SELECT A.FMATERIALID,
+                                                      A.FNUMBER
+                                               FROM T_BD_MATERIAL A) WL ON B.FMATERIALID = WL.FMATERIALID
+                          WHERE 1 = 1
+                            AND A.FDATE >= DATEADD(YEAR, DATEDIFF(YEAR, 0, GETDATE()), 0)
+                            AND A.FDOCUMENTSTATUS = 'C') T
 
-SELECT AA.FDATE,
-       AA.物料编码,
-       AA.数量,
-       FPRICE,
-       AA.数量*FPRICE AS 总金额
-FROM (SELECT po1.FPRICE,
-             po1.FMATERIALID,
-             PO.FDOCUMENTSTATUS,
-             MAT.FNUMBER                                                                      AS 物料编码,
-             QTCB.FQTY                                                                        AS 数量,
-             QTCB.FDATE,
-             ROW_NUMBER() OVER ( PARTITION BY MAT.FMATERIALID ORDER BY PO.FAPPROVEDATE DESC ) AS rn
-      FROM QTCB
-               LEFT JOIN T_BD_Material mat ON (QTCB.FNUMBER = mat.FNUMBER)
-               LEFT JOIN t_PUR_PriceListEntry po1 ON (PO1.FMATERIALID = MAT.FMATERIALID)
-               LEFT JOIN T_PUR_PriceList po ON PO.FID = PO1.FID) AA
-WHERE rn = 1
-  and FDOCUMENTSTATUS = 'c'
+                    WHERE T.XUHAO = 1) YFD ON QTCB.FNUMBER = YFD.FNUMBER
