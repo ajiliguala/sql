@@ -99,7 +99,7 @@ from drrk
          full join mtll on mtll.FNAME = drrk.FNAME
          full join myll on myll.FNAME = dyrk.FNAME
 WHERE COALESCE(drrk.FNAME, dyrk.FNAME, mtll.FNAME, myll.FNAME) = '一部切割车间'
---  AND B.FDATE >= DATEADD(MONTH, -5, CONVERT(date, GETDATE()))
---            AND B.FDATE < CONVERT(date, GETDATE())
+  AND mtll.FDATE >= DATEADD(MONTH, -5, CONVERT(date, GETDATE()))
+            AND dyrk.FDATE < CONVERT(date, GETDATE())
 
 
