@@ -24,5 +24,4 @@ FROM (SELECT A.FDATE, C.FNUMBER, B.FQTY, E.FNAME
                           WHERE 1 = 1
                             AND A.FDATE >= DATEADD(YEAR, DATEDIFF(YEAR, 0, GETDATE()), 0)
                             AND A.FDOCUMENTSTATUS = 'C') T
-
                     WHERE T.XUHAO = 1) YFD ON QTCB.FNUMBER = YFD.FNUMBER
